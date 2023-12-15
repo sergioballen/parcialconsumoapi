@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Parcial - Sergio Ballen</title>
+  
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css">
+</head>
+<body>
+
+  <div class="container mt-5">
+    <h2>Lista de Platos</h2>
+    <table class="table">
+      <thead>
+        <tr>
+          <th scope="col">_id</th>
+          <th scope="col">Nombre</th>
+          <th scope="col">Calorías</th>
+          <th scope="col">Vegetariano</th>
+          <th scope="col">Valor</th>
+          <th scope="col">Comentarios</th>
+        </tr>
+      </thead>
+      <tbody id="tableBodyAllPlates">
+        
+      </tbody>
+    </table>
+  </div>
+
+  <div class="container mt-5">
+    <h2>Consulta de Plato por _ObjectId</h2>
+    <form id="consultaForm">
+      <label for="objectId">Consultar por _ObjectId: </label>
+      <input type="text" id="objectId" name="objectId" class="form-control" required>
+      <button type="button" class="btn btn-primary mt-2" onclick="consultarPorId()">Consultar</button>
+    </form>
+
+   
+    <table class="table">
+      <thead>
+        <tr>
+          <th scope="col">_id</th>
+          <th scope="col">Nombre</th>
+          <th scope="col">Calorías</th>
+          <th scope="col">Vegetariano</th>
+          <th scope="col">Valor</th>
+          <th scope="col">Comentarios</th>
+        </tr>
+      </thead>
+      <tbody id="tableBodyPlateById">
+        
+      </tbody>
+    </table>
+  </div>
+
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.1.2/socket.io.js"></script>
+  
+  <script>
+    const socket = io('http://localhost:3000');
+
+    
+    socket.emit('listarPlatos');
+
+    
+    socket.on('platosListados', (platos) => {
+      fillTable(platos, 'tableBodyAllPlates'); 
+    });
+
+    socket.on('errorListarPlatos', (error) => {
+      console.error(error);
+      
+    });
+
+    
+    function fillTable(platos, tableBodyId) {
+      const tableBody = document.getElementById(tableBodyId);
+      tableBody.innerHTML = ''; 
+
+      platos.forEach((plato) => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+          <td>${plato._id}</td>
+          <td>${plato.name}</td>
+          <td>${plato.calories}</td>
+          <td>${plato.isVegetarian ? 'Sí' : 'No'}</td>
+          <td>${plato.value}</td>
+          <td>${plato.comments}</td>
+        `;
+        tableBody.appendChild(row);
+      });
+    }
+
+    
+    function consultarPorId() {
+      const objectIdInput = document.getElementById('objectId');
+      const objectId = objectIdInput.value.trim();
+
+      
+      socket.emit('consultarPlatoPorId', objectId);
+    }
+
+    
+    socket.on('platoConsultado', (plato) => {
+      fillTable([plato], 'tableBodyPlateById'); 
+    });
+
+    socket.on('errorConsultarPlatoPorId', (error) => {
+      console.error(error);
+      
+    });
+  </script>
+</body>
+</html>
